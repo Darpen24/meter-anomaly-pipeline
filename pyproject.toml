@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meter-anomaly-pipeline"
+version = "0.1.0"
+description = "Energy meter data quality pipeline with DuckDB and interpretable anomaly detection"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "Darpen24"}]
+dependencies = ['pandas>=2,<4', 'numpy>=1.26,<3', 'duckdb>=1,<2']
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.9,<1", "build>=1,<2"]
+
+[project.scripts]
+meter-anomaly = "meter_pipeline.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Darpen24/meter-anomaly-pipeline"
+Issues = "https://github.com/Darpen24/meter-anomaly-pipeline/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+meter_pipeline = ["resources/data/*.jsonl", "resources/data/docs/*.md", "resources/data/runbooks/*.md", "resources/prompts/*/*.txt"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

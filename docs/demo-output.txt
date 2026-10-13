@@ -1,0 +1,22 @@
+Offline demo captured on 2026-10-13 using Python 3.12.
+Synthetic inputs; not a production benchmark.
+
+$ python -m meter_pipeline --seed 7 --days 28
+DATA QUALITY
+rows in              32397
+duplicates removed   480
+late rows (>1h)      958
+missing intervals    237
+estimated intervals  121
+counter resets       1
+
+FINDINGS
+M05  drift     weekday use rising 0.61% per day (R2 0.91, 20 weekdays)
+M08  overnight night load 0.77 to 1.68 kWh per interval (2.2x)
+
+CHECK AGAINST INJECTED PROBLEMS
+true_positives: 2
+false_positives: []
+missed: []
+precision: 1.0
+recall: 1.0

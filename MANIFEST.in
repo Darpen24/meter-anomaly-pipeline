@@ -1,0 +1,4 @@
+include LICENSE README.md ADDITIONS.md CONTRIBUTING.md SECURITY.md
+recursive-include docs *.md *.txt
+recursive-include data *.md *.jsonl
+recursive-include prompts *.txt
