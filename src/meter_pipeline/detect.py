@@ -20,7 +20,12 @@ def _usable(readings: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def detect_drift(readings: pd.DataFrame, min_slope: float = 0.004, min_r2: float = 0.6):
+def detect_drift(
+    readings: pd.DataFrame,
+    min_slope: float = 0.004,
+    min_r2: float = 0.6,
+    time_basis: str = "working_day",
+):
     """Flag meters whose weekday use keeps climbing day after day.
 
     Weekday working hours only (07:00 to 18:00), so the weekly pattern and a night time
@@ -28,7 +33,13 @@ def detect_drift(readings: pd.DataFrame, min_slope: float = 0.004, min_r2: float
     when the trend explains most of the movement and rises faster than `min_slope`
     (share of its typical daily use, per day). Days are compared on average load per
     interval, so a day with a few missing readings does not look like a dip.
+    Slopes use elapsed Monday-Friday working days by default, including missing
+    working days; holidays are not excluded. Set time_basis="calendar_day" for
+    elapsed calendar days. min_slope uses the selected day unit.
     """
+    if time_basis not in {"working_day", "calendar_day"}:
+        raise ValueError("time_basis must be 'working_day' or 'calendar_day'")
+    unit = "working day" if time_basis == "working_day" else "calendar day"
     df = _usable(readings)
     df = df[(df["ts"].dt.dayofweek < 5) & (df["ts"].dt.hour >= 7) & (df["ts"].dt.hour < 18)]
     out = []
@@ -38,14 +49,21 @@ def detect_drift(readings: pd.DataFrame, min_slope: float = 0.004, min_r2: float
         if len(daily) < 10:
             continue
         y = daily["mean"].to_numpy() / daily["mean"].median()
-        x = np.arange(len(y), dtype=float)
+        # Missing observation days must not compress the declared time axis.
+        if time_basis == "working_day":
+            dates = daily.index.to_numpy(dtype="datetime64[D]")
+            x = np.busday_count(dates[0], dates).astype(float)
+        else:
+            x = ((daily.index - daily.index[0]) / pd.Timedelta(days=1)).to_numpy(
+                dtype=float
+            )
         slope, intercept = np.polyfit(x, y, 1)
         fit = slope * x + intercept
         ss_res = float(((y - fit) ** 2).sum())
         ss_tot = float(((y - y.mean()) ** 2).sum())
         r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
         if slope > min_slope and r2 > min_r2:
-            out.append(Finding(mid, "drift", f"weekday use rising {slope * 100:.2f}% per day (R2 {r2:.2f}, {len(y)} weekdays)"))
+            out.append(Finding(mid, "drift", f"weekday use rising {slope * 100:.2f}% per {unit} (R2 {r2:.2f}, {len(y)} weekdays)"))
     return out
 
 
