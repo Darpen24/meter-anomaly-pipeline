@@ -57,6 +57,14 @@ The default seed 7 demo identifies M05 as drifting and M08 as having elevated ov
 
 Use `--seed`, `--days` and `--db` to control the demo. Detection is rule based and configured for the synthetic site profiles. It has not been validated on real meters. Backfills require the cumulative raw history up to the arrival cutoff, rather than only a delta batch.
 
+Drift uses elapsed Monday-Friday working days by default, including working days
+with missing or insufficient readings; weekends are excluded and public holidays
+are not modeled. The finding labels the rate `per working day`. For elapsed
+calendar days, call `detect_drift(readings, time_basis="calendar_day")`; its rate
+is labeled `per calendar day`. `min_slope` is the share of median load per chosen
+day unit. Its default remains `0.004`, but switching units does not recalibrate
+that threshold for a real site. Both modes still use weekday working-hour data.
+
 Demo metrics describe a small synthetic fixture, not production performance. See the captured output and design notes before interpreting results.
 
 ## Development
