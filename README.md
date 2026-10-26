@@ -27,6 +27,18 @@ python -m pytest -q
 
 The installed command `meter-anomaly` is also available. No `PYTHONPATH` setup is required.
 
+## Process a CSV feed
+
+```bash
+meter-anomaly --input examples/readings.csv --db readings.duckdb --json-output reports/latest.json
+```
+
+Use `--until 2026-01-05T00:10:00Z` to process only arrivals up to a cutoff. Invalid
+inputs fail before stored readings change. The report includes batch quality,
+stored row counts, and findings across the database. See the [CSV input contract](docs/csv-input.md)
+for site profiles, UTC timestamp handling, rerun semantics, and report fields.
+The small sample demonstrates ingestion; it has too little history for detection.
+
 ## Architecture
 
 ```mermaid
@@ -51,7 +63,7 @@ flowchart LR
 
 ## Verified offline results
 
-The default seed 7 demo identifies M05 as drifting and M08 as having elevated overnight consumption. Precision and recall are both 1.0 on this synthetic fixture. The test suite contains 10 passing cases, including early arrival cutoffs and invalid generator windows.
+The default seed 7 demo identifies M05 as drifting and M08 as having elevated overnight consumption. Precision and recall are both 1.0 on this synthetic fixture. Regression tests cover elapsed-day drift spacing, early arrival cutoffs, input validation, CSV ingestion, report export, and reruns. The captured demo output predates the explicit `per working day` wording introduced by PR #1.
 
 ## Configuration and scope
 

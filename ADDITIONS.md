@@ -17,3 +17,12 @@ No production deployment, live provider results or real customer data are claime
 Fixed empty arrival-cutoff batches so early backfill runs are safe, validated the generator's minimum time window, and added regression coverage.
 
 Added source-distribution manifests and CI verification of installed wheels from outside the checkout.
+
+## 26 October 2026 upgrade
+
+- Reviewed and merged contributor PR #1, preserving elapsed working-day spacing in drift detection.
+- Added batch validation, UTC normalization, deterministic duplicate tie handling, and regression tests confirming invalid feeds leave stored readings unchanged.
+- Added CSV ingestion, arrival cutoffs, JSON reports, and actionable command-line errors.
+- Prevented report paths from overwriting input feeds or database files.
+- Limited synthetic scoring to an isolated complete demo, avoiding misleading scores for external or partial data.
+- Added an example feed, input-contract documentation, and a CSV smoke test in CI.

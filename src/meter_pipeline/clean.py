@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from .generate import INTERVAL, SITES
+from .validation import validate_raw
 
 LATE_AFTER = pd.Timedelta(hours=1)
 
@@ -61,6 +62,7 @@ def _one_meter(g: pd.DataFrame, cfg: dict) -> pd.DataFrame:
 
 def clean(raw: pd.DataFrame) -> tuple[pd.DataFrame, QualityReport]:
     """Return one row per meter and 15 minute interval, plus a quality report."""
+    raw = validate_raw(raw)
     if raw.empty:
         empty = pd.DataFrame({
             "meter_id": pd.Series(dtype="str"),
@@ -73,7 +75,7 @@ def clean(raw: pd.DataFrame) -> tuple[pd.DataFrame, QualityReport]:
     late_rows = int(((raw["ingested_at"] - raw["ts"]) > LATE_AFTER).sum())
 
     # Duplicates: keep the most recently received row for each meter and timestamp.
-    deduped = raw.sort_values("ingested_at").drop_duplicates(["meter_id", "ts"], keep="last")
+    deduped = raw.sort_values("ingested_at", kind="stable").drop_duplicates(["meter_id", "ts"], keep="last")
     removed = rows_in - len(deduped)
 
     parts = []
