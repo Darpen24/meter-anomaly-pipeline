@@ -24,3 +24,4 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           python -m meter_pipeline --seed 7 --days 28
+          python -m meter_pipeline --input "$GITHUB_WORKSPACE/examples/readings.csv" --json-output reports/sample.json
