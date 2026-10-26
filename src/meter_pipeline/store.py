@@ -5,6 +5,7 @@ import duckdb
 import pandas as pd
 
 from .clean import clean
+from .validation import validate_raw
 
 
 def connect(path: str = ":memory:") -> duckdb.DuckDBPyConnection:
@@ -25,8 +26,10 @@ def connect(path: str = ":memory:") -> duckdb.DuckDBPyConnection:
 
 def upsert(con: duckdb.DuckDBPyConnection, df: pd.DataFrame) -> None:
     con.register("incoming", df)
-    con.execute("INSERT OR REPLACE INTO readings SELECT meter_id, ts, kwh, quality FROM incoming")
-    con.unregister("incoming")
+    try:
+        con.execute("INSERT OR REPLACE INTO readings SELECT meter_id, ts, kwh, quality FROM incoming")
+    finally:
+        con.unregister("incoming")
 
 
 def load(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
@@ -39,7 +42,14 @@ def run(con: duckdb.DuckDBPyConnection, raw: pd.DataFrame, until: pd.Timestamp |
     A reading that arrives late is simply picked up by a later run and replaces the
     gap it belongs to. A backfill is the same call with a later `until`.
     """
-    seen = raw if until is None else raw[raw["ingested_at"] <= until]
+    if until is not None:
+        raw = validate_raw(raw)
+        cutoff = pd.to_datetime(until, utc=True).tz_localize(None)
+        if pd.isna(cutoff):
+            raise ValueError("until must be a valid timestamp")
+        seen = raw[raw["ingested_at"] <= cutoff]
+    else:
+        seen = raw
     cleaned, report = clean(seen)
     upsert(con, cleaned)
     return report
